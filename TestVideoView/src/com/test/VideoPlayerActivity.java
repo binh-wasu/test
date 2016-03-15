@@ -48,16 +48,12 @@ public class VideoPlayerActivity extends Activity implements
 			private final String tag = VideoPlayerActivity.class.getSimpleName();
 			
 			boolean isok = false;	
-			public static final int FLAG_HOMEKEY_DISPATCHED = 0x80000000;
 			VideoView videoView;		
 			Handler handler = new Handler();		
-			public int flag = 0;
 						
 			@Override
 			protected void onCreate(Bundle savedInstanceState) {
 				super.onCreate(savedInstanceState);
-				flag = View.SYSTEM_UI_FLAG_VISIBLE | View.SYSTEM_UI_FLAG_LOW_PROFILE | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-				this.getWindow().setFlags(FLAG_HOMEKEY_DISPATCHED, FLAG_HOMEKEY_DISPATCHED);
 				setContentView(R.layout.activity_video_player);
 				this.init();
 	}
@@ -98,21 +94,24 @@ public class VideoPlayerActivity extends Activity implements
 		// this.finish();
 		videoView.stopPlayback();
 		new AlertDialog.Builder(this)
-		.setTitle("提示")
-		.setMessage("播放完成!")
-		.setPositiveButton("退出", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				android.os.Process.killProcess(android.os.Process.myPid());
-			}
-		})
-		.setNegativeButton("重播", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				init();				
-			}
-		})
-		.create().show();	
+			.setTitle("提示")
+			.setMessage("播放完成!")
+			.setCancelable(false)
+			.setPositiveButton("退出", new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					android.os.Process.killProcess(android.os.Process.myPid());
+				}
+			})
+			.setNegativeButton("重播", new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					init();				
+				}
+			})
+			.setCancelable(false)
+			.setOnKeyListener(keylistener)
+			.create().show();	
 	}
 
 	Runnable r = new Runnable() {
@@ -165,7 +164,7 @@ public class VideoPlayerActivity extends Activity implements
 	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
 		Log.i(tag, "onKeyUp = " + keyCode );
-		if(keyCode == 4){
+		if(keyCode == KeyEvent.KEYCODE_BACK){
 			exitApplication();
 			return true;
 		}
@@ -176,24 +175,39 @@ public class VideoPlayerActivity extends Activity implements
 		videoView.pause();
 		Log.i(tag, "pause()");
 		new AlertDialog.Builder(this)
-				.setTitle("提示")
-				.setMessage("是否退出播放？")
-				.setPositiveButton("确定", new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog,int which) {
-						videoView.stopPlayback();
-						Log.i(tag, "stopPlayback()");
-						android.os.Process.killProcess(android.os.Process.myPid());
-					}
-				})
-				.setNegativeButton("取消", new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog,int which) {
-						videoView.start();
-						Log.i(tag, "start()");
-					}
-				}).show();
+			.setCancelable(false)
+			.setOnKeyListener(keylistener)
+			.setTitle("提示")
+			.setMessage("是否退出播放？")
+			.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog,int which) {
+					videoView.stopPlayback();
+					Log.i(tag, "stopPlayback()");
+					android.os.Process.killProcess(android.os.Process.myPid());
+				}
+			})
+			.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog,int which) {
+					videoView.start();
+					Log.i(tag, "start()");
+				}
+			}).show();
 	}
+	
+	android.content.DialogInterface.OnKeyListener keylistener = new DialogInterface.OnKeyListener(){
+        public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+            if (keyCode==KeyEvent.KEYCODE_BACK && event.getRepeatCount()==0)
+            {
+             return true;
+            }
+            else
+            {
+             return false;
+            }
+        }
+    } ;
 	
 	@Override
 	public boolean onGenericMotion(View v, MotionEvent event) {
@@ -228,25 +242,27 @@ public class VideoPlayerActivity extends Activity implements
 	public boolean onError(MediaPlayer mp, int what, int extra) {
 		Log.i(tag, "onError = " +String.valueOf(what));	
 		new AlertDialog.Builder(this)
-		.setTitle("提示")
-		.setMessage("播放器异常，错误码：    "+String.valueOf(what))
-		.setPositiveButton("退出", 
-				new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						android.os.Process.killProcess(android.os.Process.myPid());
+			.setCancelable(false)
+			.setOnKeyListener(keylistener)
+			.setTitle("播放异常")
+			.setMessage("错误代码："+String.valueOf(what) + "\n" + "错误描述：" +Constant.errorCodeMap.get(what) + "\n")
+			.setPositiveButton("退出", 
+					new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							android.os.Process.killProcess(android.os.Process.myPid());
+							}
+				}
+			)
+			.setNegativeButton("重试", 
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int which) {
+							init();
+							}
 						}
-			}
-		)
-		.setNegativeButton("重试", 
-				new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int which) {
-						init();
-						}
-					}
-		)
-		.create().show();		
-		return true;
+			)
+			.create().show();		
+			return true;
 	}
 	
 	@Override
