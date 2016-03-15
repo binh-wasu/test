@@ -10,8 +10,7 @@ import android.content.Context;
 	
 	public static Context context;
 	
-//	public static String playUrl = "http://chyd-wsvod.wasu.tv/data11/ott/344/2014-09/22/1411356408554_579762/playlist.m3u8";
-	public static String playUrl = "http://chyd-wsvod.wasu.tv/data11/ott/344/2014-09/22/1411356408554_579762/pl";
+	public static String playUrl = "http://chyd-wsvod.wasu.tv/data11/ott/344/2014-09/22/1411356408554_579762/playlist.m3u8";
 	
 	public static Map<Integer, String> errorCodeMap;
 	static {
